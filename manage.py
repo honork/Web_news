@@ -6,6 +6,7 @@ from flask_migrate import Migrate,MigrateCommand
 # 导入info模块创建的程序实例app
 from info import create_app,db
 
+# 调用工厂方法，获取app
 app = create_app('development')
 
 # 实例化管理器对象
