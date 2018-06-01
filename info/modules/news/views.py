@@ -1,4 +1,4 @@
-from flask import session
+from flask import session, render_template
 # 导入蓝图对象
 from . import news_blu
 
@@ -6,4 +6,4 @@ from . import news_blu
 @news_blu.route('/')
 def index():
     session['name'] = '2018'
-    return 'index2016'
+    return render_template('news/index.html')
