@@ -40,5 +40,9 @@ def create_app(config_name):
     # 把db对象和app进行关联
     db.init_app(app)
 
+    # 导入蓝图对象
+    from info.modules.news import news_blu
+    # 注册蓝图对象
+    app.register_blueprint(news_blu)
 
     return app

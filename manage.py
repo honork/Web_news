@@ -17,13 +17,8 @@ Migrate(app,db)
 manage.add_command('db',MigrateCommand)
 
 
-@app.route('/')
-def index():
-    session['name'] = '2018'
-    return 'index2016'
-
-
 
 if __name__ == '__main__':
-    # app.run(debug=True)
+    # 输出路由映射
+    print(app.url_map)
     manage.run()
