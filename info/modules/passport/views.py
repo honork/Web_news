@@ -48,6 +48,29 @@ def generate_image_code():
         # 返回响应
         return response
 
+@passport_blu.route('/sms_code',methods=['POST'])
+def send_sms_code():
+    """
+    发送短信
+    1、获取参数，mobile,image_code,image_code_id
+    2、判断参数的完整性
+    3、验证手机号格式，正则
+    4、校验图片验证码，从redis读取真实的图片验证码
+    real_image_code = redis._store.get(key)
+    5、判断获取结果是否存在，如果不存在，表示已过期
+    6、如果图片验证码存在，需要删除图片验证码，本质是任意一个图片验证码，只能读取一次；
+    7、比较图片验证码内容是否一致；
+    8、查询mysql数据库，确认手机号是否已经注册；
+    9、生成短信随机数；六位
+    10、把短信随机数保存到redis数据库中，设置有效期
+    11、调用云通讯扩展，来发送短信，保存发送结果
+    12、判断发送结果是否成功。
+
+    :return:
+    """
+
+
+    pass
 
 
 
