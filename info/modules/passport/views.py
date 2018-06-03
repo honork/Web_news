@@ -1,6 +1,9 @@
 # 导入蓝图对象
+import random
+
 from flask import request, jsonify, current_app, make_response
 
+from info.models import User
 from . import passport_blu
 # 导入自定义的状态码
 from info.utils.response_code import RET
@@ -8,6 +11,11 @@ from info.utils.response_code import RET
 from info.utils.captcha.captcha import captcha
 # 导入redis实例
 from info import redis_store,constants
+# 导入正则模块
+import re
+# 导入云通讯
+from info.libs.yuntongxun import sms
+
 
 
 @passport_blu.route('/image_code')
@@ -56,7 +64,7 @@ def send_sms_code():
     2、判断参数的完整性
     3、验证手机号格式，正则
     4、校验图片验证码，从redis读取真实的图片验证码
-    real_image_code = redis._store.get(key)
+    real_image_code = redis_store.get(key)
     5、判断获取结果是否存在，如果不存在，表示已过期
     6、如果图片验证码存在，需要删除图片验证码，本质是任意一个图片验证码，只能读取一次；
     7、比较图片验证码内容是否一致；
@@ -68,9 +76,70 @@ def send_sms_code():
 
     :return:
     """
+    # 获取手机号、用户输入的图片验证码内容，图片验证码编号
+    mobile = request.json.get('mobile')
+    image_code = request.json.get('image_code')
+    image_code_id = request.json.get('image_code_id')
+    # 检查参数的完整性
+    # if mobile and image_code and image_code_id
+    if not all([mobile,image_code,image_code_id]):
+        return jsonify(errno=RET.PARAMERR,errmsg='参数不完整')
+    # 检查手机号格式
+    if not re.match(r'1[3456789]\d{9}',mobile):
+        return jsonify(errno=RET.PARAMERR,errmsg='手机号格式错误')
+    # 检查图片验证码，首先从redis获取真实的图片验证码
+    try:
+        real_image_code = redis_store.get('ImageCode_' + image_code_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR,errmsg='获取图片验证码失败')
+    # 判断获取结果是否存在
+    if not real_image_code:
+        return jsonify(errno=RET.NODATA,errmsg='图片验证码已经过期')
+    # 删除图片验证码，因为图片验证码只能校验一次
+    try:
+        redis_store.delete('ImageCode_' + image_code_id)
+    except Exception as e:
+        current_app.logger.error(e)
+    # 比较图片验证码是否正确,忽略大小写
+    if real_image_code.lower() != image_code.lower():
+        return jsonify(errno=RET.DATAERR,errmsg='图片验证码不一致')
+    # 查询mysql数据库，确认用户是否注册
+    try:
+        user = User.query.filter_by(mobile=mobile).first()
+    except Exception as e:
+        current_app.loggere.error(e)
+        return jsonify(errno=RET.DBERR,errmsg='查询用户信息失败')
+    else:
+        # 判断查询结果是否存在
+        if user is not None:
+            return jsonify(errno=RET.DATAEXIST,errmsg='手机号已注册')
+    # 构造六位数的短信随机数
+    sms_code = '%06d' % random.randint(0, 999999)
+    # 保存到redis数据库中
+    try:
+        redis_store.setex('SMSCode_' + mobile,constants.SMS_CODE_REDIS_EXPIRES,sms_code)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR,errmsg='保存数据失败')
+    # 调用云通讯发送短信验证码
+    try:
+        ccp = sms.CCP()
+        # 调用模板方法，发送短信，保存发送结果
+        result = ccp.send_template_sms(mobile,[sms_code,constants.SMS_CODE_REDIS_EXPIRES/60],1)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.THIRDERR,errmsg='发送短信异常')
+    # 判断发送结果是否成功
+    if result == 0:
+        return jsonify(errno=RET.OK,errmsg='发送成功')
+    else:
+        return jsonify(errno=RET.THIRDERR,errmsg='发送失败')
 
 
-    pass
+
+
+
 
 
 
