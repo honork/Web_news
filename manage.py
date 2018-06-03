@@ -5,6 +5,8 @@ from flask_script import Manager
 from flask_migrate import Migrate,MigrateCommand
 # 导入info模块创建的程序实例app
 from info import create_app,db
+# 导入models
+from info import models
 
 
 # 调用工厂方法，获取app
