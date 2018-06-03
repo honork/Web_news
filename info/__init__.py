@@ -6,14 +6,17 @@ from flask_session import Session
 # 导入扩展flask-wtf
 from flask_wtf import CSRFProtect
 # 导入配置对象的字典
-from config import config
+from config import config,Config
 # 导入日志模块
 import logging
 # 导入日志模块中的文件处理
 from logging.handlers import RotatingFileHandler
-
+from redis import StrictRedis
 # 实例化sqlalchemy对象
 db = SQLAlchemy()
+# 实例化redis数据库，用来临时缓存和业务逻辑相关的数据，比如说图片验证码、短信验证码、用户信息
+redis_store = StrictRedis(host=Config.REDIS_HOST,port=Config.REDIS_PORT)
+
 
 # 集成项目日志
 # 设置日志的记录等级
