@@ -179,7 +179,44 @@ function sendSMSCode() {
         return;
     }
 
-    // TODO 发送短信验证码
+    // 发送短信验证码
+    // 构造请求的参数
+    var params = {
+        "mobile":mobile,
+        "image_code":imageCode,
+        "image_code_id":imageCodeId
+    };
+    // 发送ajax
+    $.ajax({
+        url:'/sms_code',
+        type:'post',
+        data:JSON.stringify(params),
+        contentType:'application/json',
+        // 请求头，前端需要把浏览器的cookie中的csrf_token手动放入到请求体中
+        headers:{
+            'X-CSRFToken':getCookie('csrf_token')
+        },
+        success:function(resp){
+            if (resp.errno == '0'){
+                var num = 60;
+                // 构造定时器对象
+                var t = setInterval(function(){
+                    if (num == 1){
+                        $('.get_code').html('点击获取验证码');
+                        $('.get_code').attr("onclick", "sendSMSCode();");
+                    }else{
+                        num -= 1;
+                        $('.get_code').html(num + '秒')
+                    }
+                },1000)
+            }else{
+                alert(resp.errmsg);
+                $('.get_code').html('点击获取验证码');
+                $('.get_code').attr("onclick", "sendSMSCode();");
+            }
+        }
+    })
+
 }
 
 // 调用该函数模拟点击左侧按钮

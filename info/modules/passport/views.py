@@ -41,6 +41,7 @@ def generate_image_code():
         return jsonify(errno=RET.PARAMERR,errmsg='参数缺失')
     # 调用扩展来生成图片验证码
     name,text,image = captcha.generate_captcha()
+    print(text)
     # 保存图片验证码到redis数据库
     try:
         redis_store.setex('ImageCode_' + image_code_id,constants.IMAGE_CODE_REDIS_EXPIRES,text)
@@ -80,6 +81,7 @@ def send_sms_code():
     mobile = request.json.get('mobile')
     image_code = request.json.get('image_code')
     image_code_id = request.json.get('image_code_id')
+    print(image_code)
     # 检查参数的完整性
     # if mobile and image_code and image_code_id
     if not all([mobile,image_code,image_code_id]):

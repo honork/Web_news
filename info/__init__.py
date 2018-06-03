@@ -12,10 +12,15 @@ import logging
 # 导入日志模块中的文件处理
 from logging.handlers import RotatingFileHandler
 from redis import StrictRedis
+# 导入wtf扩展生成csrf_token
+from flask_wtf import csrf
+
+
+
 # 实例化sqlalchemy对象
 db = SQLAlchemy()
 # 实例化redis数据库，用来临时缓存和业务逻辑相关的数据，比如说图片验证码、短信验证码、用户信息
-redis_store = StrictRedis(host=Config.REDIS_HOST,port=Config.REDIS_PORT)
+redis_store = StrictRedis(host=Config.REDIS_HOST,port=Config.REDIS_PORT,decode_responses=True)
 
 
 # 集成项目日志
@@ -42,6 +47,16 @@ def create_app(config_name):
     CSRFProtect(app)
     # 把db对象和app进行关联
     db.init_app(app)
+
+    # 使用请求钩子，在每次请求后执行设置csrf_token
+    @app.after_request
+    def after_request(response):
+        # 调用扩展生成csrf-token口令
+        csrf_token = csrf.generate_csrf()
+        # 把csrf-token口令写入到客户端浏览器的cookie中
+        response.set_cookie('csrf_token',csrf_token)
+        return response
+
 
     # 导入蓝图对象
     from info.modules.news import news_blu
