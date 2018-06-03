@@ -48,4 +48,7 @@ def create_app(config_name):
     # 注册蓝图对象
     app.register_blueprint(news_blu)
 
+    from info.modules.passport import passport_blu
+    app.register_blueprint(passport_blu)
+
     return app

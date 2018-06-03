@@ -150,8 +150,13 @@ $(function(){
 
 var imageCodeId = ""
 
-// TODO 生成一个图片验证码的编号，并设置页面中图片验证码img标签的src属性
+// 生成一个图片验证码的编号，并设置页面中图片验证码img标签的src属性
 function generateImageCode() {
+    // 获取uuid
+    imageCodeId = generateUUID();
+    // 构造请求的url
+    var url = '/image_code?image_code_id=' + imageCodeId
+    $('.get_pic_code').attr('src',url)
 
 }
 
