@@ -155,7 +155,7 @@ function generateImageCode() {
     // 获取uuid
     imageCodeId = generateUUID();
     // 构造请求的url
-    var url = '/image_code?image_code_id=' + imageCodeId
+    var url = '/passport/image_code?image_code_id=' + imageCodeId
     $('.get_pic_code').attr('src',url)
 
 }
@@ -188,7 +188,7 @@ function sendSMSCode() {
     };
     // 发送ajax
     $.ajax({
-        url:'/sms_code',
+        url:'/passport/sms_code',
         type:'post',
         data:JSON.stringify(params),
         contentType:'application/json',
@@ -202,6 +202,8 @@ function sendSMSCode() {
                 // 构造定时器对象
                 var t = setInterval(function(){
                     if (num == 1){
+                        // 清除定时器对象
+                        clearInterval(t)
                         $('.get_code').html('点击获取验证码');
                         $('.get_code').attr("onclick", "sendSMSCode();");
                     }else{

@@ -57,6 +57,7 @@ def generate_image_code():
         # 返回响应
         return response
 
+
 @passport_blu.route('/sms_code',methods=['POST'])
 def send_sms_code():
     """
@@ -74,7 +75,6 @@ def send_sms_code():
     10、把短信随机数保存到redis数据库中，设置有效期
     11、调用云通讯扩展，来发送短信，保存发送结果
     12、判断发送结果是否成功。
-
     :return:
     """
     # 获取手机号、用户输入的图片验证码内容，图片验证码编号
@@ -139,7 +139,32 @@ def send_sms_code():
         return jsonify(errno=RET.THIRDERR,errmsg='发送失败')
 
 
-
+# http://127.0.0.1:5000/passport/register
+@passport_blu.route('/register',methods=['POST'])
+def register():
+    """
+    用户注册
+    1、获取参数，mobile/sms_code/password
+    2、校验参数的完整性
+    3、检查手机号的格式
+    4、短信验证码进行比较
+    5、尝试从redis数据库中获取真实的短信验证码
+    6、判断获取结果是否有数据
+    7、比较短信验证码是否正确
+    8、如果短信验证码正确，删除redis中的短信验证码
+    9、验证手机号是否注册
+    10、构造模型类对象，准备存储用户信息
+    user = User()
+    user.mobile = mobile
+    user.nick_name = mobile
+    11、需要对密码进行加密存储，
+    user.password = password
+    12、保存数据到mysql数据库中
+    13、把用户信息缓存到redis数据库中
+    session['user_id'] = user.id
+    14、返回结果
+    :return:
+    """
 
 
 

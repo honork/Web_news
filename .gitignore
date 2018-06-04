@@ -1,3 +1,5 @@
 .idea/
 *.py[cop]
 logs/log
+.DS_Store
+migrations/
