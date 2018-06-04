@@ -243,11 +243,38 @@ def login():
 
     :return:
     """
+    # 获取手机号和密码
+    mobile = request.json.get('mobile')
+    password = request.json.get('password')
+    # 检查参数的完整性
+    if not all([mobile,password]):
+        return jsonify(errno=RET.PARAMERR,errmsg='参数缺失')
+    # 对手机号格式进行检查
+    if not re.match(r'1[3456789]\d{9}$',mobile):
+        return jsonify(errno=RET.PARAMERR,errmsg='手机号格式错误')
+    # 根据手机号来查询mysql数据库，确认用户已注册
+    try:
+        user = User.query.filter_by(mobile=mobile).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR,errmsg='查询数据失败')
+    # # 判断查询结果
+    # if not user:
+    #     return jsonify(errno=RET.NODATA,errmsg='用户名或密码错误')
+    # # 判断密码是否正确
+    # if not user.check_password(password):
+    #     return jsonify(errno=RET.DATAERR,errmsg='用户名或密码错误')
+    # 判断用户是否注册，以及密码是否正确
+    if user is None or not user.check_password(password):
+        return jsonify(errno=RET.DATAERR,errmsg='用户名或密码错误')
+    # 缓存用户信息
+    session['user_id'] = user.id
+    session['mobile'] = user.mobile
+    # 需要修改默认的昵称，因为用户可以登录多次，可能会在某次登录的过程中修改了昵称
+    session['nick_name'] = user.nick_name
+    # 返回结果
+    return jsonify(errno=RET.OK,errmsg='OK')
 
-
-
-
-    pass
 
 
 
