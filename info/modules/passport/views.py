@@ -275,6 +275,18 @@ def login():
     # 返回结果
     return jsonify(errno=RET.OK,errmsg='OK')
 
+@passport_blu.route('/logout')
+def logout():
+    """
+    用户退出
+    1、退出的本质是把缓存的用户信息进行清除
+    :return:
+    """
+    # session.clear()会把用户信息全部清空
+    session.pop("user_id")
+    session.pop("nick_name")
+    session.pop("mobile")
+    return jsonify(errno=RET.OK,errmsg='OK')
 
 
 
