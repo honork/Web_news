@@ -113,7 +113,7 @@ $(function(){
     })
 
 
-    // TODO 注册按钮点击
+    // 注册按钮点击
     $(".register_form_con").submit(function (e) {
         // 阻止默认提交操作
         e.preventDefault()
@@ -144,6 +144,32 @@ $(function(){
         }
 
         // 发起注册请求
+        // 构造请求参数
+        var params = {
+            "mobile":mobile,
+            "sms_code":smscode,
+            "password":password
+        }
+
+        //发送ajax请求，post
+        $.ajax({
+            url:'/passport/register',
+            type:'post',
+            data:JSON.stringify(params),
+            contentType:'application/json',//dataType:'json'
+            headers:{
+                'X-CSRFToken':getCookie('csrf_token')
+            },
+            success:function(resp){
+                if (resp.errno == '0'){
+                    location.reload()
+                }else{
+                    alert(resp.errmsg);
+                    $("#register-password-err").html(resp.errmsg);
+                    $("#register-password-err").show();
+                }
+            }
+        })
 
     })
 })

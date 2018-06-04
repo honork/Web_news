@@ -118,6 +118,7 @@ def send_sms_code():
             return jsonify(errno=RET.DATAEXIST,errmsg='手机号已注册')
     # 构造六位数的短信随机数
     sms_code = '%06d' % random.randint(0, 999999)
+    # print(sms_code)
     # 保存到redis数据库中
     try:
         redis_store.setex('SMSCode_' + mobile,constants.SMS_CODE_REDIS_EXPIRES,sms_code)
