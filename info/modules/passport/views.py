@@ -229,7 +229,25 @@ def register():
     return jsonify(errno=RET.OK,errmsg='注册成功')
 
 
+@passport_blu.route('/login',methods=['POST'])
+def login():
+    """
+    用户登录
+    1、获取参数，mobile，password
+    2、检查参数的完整性
+    3、检查手机号的格式
+    4、根据手机号查询数据库，获取用户注册信息
+    5、对密码的正确性进行检查，user.check_password(password)
+    6、缓存用户信息
+    7、返回结果
 
+    :return:
+    """
+
+
+
+
+    pass
 
 
 
