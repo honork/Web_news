@@ -56,6 +56,9 @@ def create_app(config_name):
         # 把csrf-token口令写入到客户端浏览器的cookie中
         response.set_cookie('csrf_token',csrf_token)
         return response
+    # 添加自定义的过滤器给模板
+    from info.utils.commons import index_class
+    app.add_template_filter(index_class,'index_class')
 
 
     # 导入蓝图对象
