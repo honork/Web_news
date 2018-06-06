@@ -1,4 +1,4 @@
-from flask import session, render_template, current_app, jsonify, request
+from flask import session, render_template, current_app, jsonify, request, g
 # 导入蓝图对象
 from . import news_blu
 # 导入User模型类
@@ -6,8 +6,9 @@ from info.models import User, News, Category
 # 导入自定义的状态码
 from info.utils.response_code import RET
 # 导入常量配置信息
-from info import constants
-
+from info import constants, db
+# 导入自定义的登录验证装饰器
+from info.utils.commons import login_required
 
 # 使用蓝图对象
 @news_blu.route('/')
@@ -119,6 +120,48 @@ def get_news_list():
     }
     # 返回结果
     return jsonify(errno=RET.OK,errmsg='OK',data=data)
+
+
+@news_blu.route('/<int:news_id>')
+@login_required
+def get_news_detail(news_id):
+    """
+    新闻详情页面
+    1、判断用户的登录状态
+    2、获取news_id,查询数据库
+    3、判断查询结果
+    4、返回新闻的详情数据
+    :return:
+    """
+    user = g.user
+    if not user:
+        return jsonify(errno=RET.SESSIONERR,errmsg='用户未登录')
+    # 根据新闻id来查询新闻详细的数据
+    try:
+        news = News.query.get(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR,errmsg='查询新闻数据失败')
+    # 判断查询结果
+    if not news:
+        return jsonify(errno=RET.NODATA,errmsg='无新闻数据')
+    # 如果news存在，点击次数加1
+    news.clicks += 1
+    # SQLALCHEMY_COMMIT_ON_TEARDOWN = True
+    try:
+        db.session.add(news)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR,errmsg='保存数据失败')
+    data = {
+        'news':news.to_dict()
+    }
+
+    return render_template('news/detail.html',data=data)
+
+
 
 
 
