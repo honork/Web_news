@@ -2,7 +2,7 @@ from flask import session, render_template, current_app, jsonify
 # 导入蓝图对象
 from . import news_blu
 # 导入User模型类
-from info.models import User, News
+from info.models import User, News, Category
 # 导入自定义的状态码
 from info.utils.response_code import RET
 
@@ -10,7 +10,6 @@ from info.utils.response_code import RET
 @news_blu.route('/')
 def index():
     """
-
     展示用户登录信息:检查用户登录状态；
     2、尝试从redis数据库中获取用户的缓存信息，user_id
     3、判断获取结果是否存在
@@ -43,9 +42,25 @@ def index():
     for news in news_list:
         news_dict_list.append(news.to_dict())
 
+    # 首页分类数据的加载
+    try:
+        categories = Category.query.all()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR,errmsg='查询分类数据失败')
+    # 检查查询结果
+    if not categories:
+        return jsonify(errno=RET.NODATA,errmsg='无分类数据')
+    # 定义容器，存储查询结果对象调用to_dict返回的字典数据
+    category_list = []
+    for category in categories:
+        category_list.append(category.to_dict())
+
+
     data = {
         'user_info':user.to_dict() if user else None,
-        'news_dict_list':news_dict_list
+        'news_dict_list':news_dict_list,
+        'category_list':category_list
     }
 
     return render_template('news/index.html',data=data)
