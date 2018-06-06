@@ -134,8 +134,8 @@ def get_news_detail(news_id):
     :return:
     """
     user = g.user
-    if not user:
-        return jsonify(errno=RET.SESSIONERR,errmsg='用户未登录')
+    # if not user:
+    #     return jsonify(errno=RET.SESSIONERR,errmsg='用户未登录')
     # 根据新闻id来查询新闻详细的数据
     try:
         news = News.query.get(news_id)
@@ -156,6 +156,7 @@ def get_news_detail(news_id):
         db.session.rollback()
         return jsonify(errno=RET.DBERR,errmsg='保存数据失败')
     data = {
+        'user':user.to_dict() if user else None,
         'news':news.to_dict()
     }
 
