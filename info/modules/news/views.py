@@ -96,7 +96,7 @@ def get_news_list():
         return jsonify(errno=RET.PARAMERR,errmsg='参数格式错误')
     # 根据分类id来查询数据库
     filters = []
-    if cid > 0:
+    if cid > 1:
         filters.append(News.category_id == cid)
     try:
         # 默认按照新闻分类进行过滤，按照新闻发布时间倒序排序，分页每页10条
