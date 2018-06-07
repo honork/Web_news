@@ -2,7 +2,7 @@ from flask import session, render_template, current_app, jsonify, request, g
 # 导入蓝图对象
 from . import news_blu
 # 导入User模型类
-from info.models import User, News, Category
+from info.models import User, News, Category, Comment, CommentLike
 # 导入自定义的状态码
 from info.utils.response_code import RET
 # 导入常量配置信息
