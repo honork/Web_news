@@ -225,6 +225,164 @@ def news_collect():
     return jsonify(errno=RET.OK,errmsg='OK')
 
 
+@news_blu.route('/news_comment',methods=['POST'])
+@login_required
+def comments_news():
+    """
+    评论新闻
+    1、判断用户是否登录
+    2、获取参数，news_id,comment,parent_id
+    3、检查参数的完整
+    4、校验news_id,parent_id转成整型
+    5、根据news_id查询数据库
+    6、实例化评论表对象，保存评论id、新闻id，新闻内容，
+    7、提交数据返回结果
+
+    :return:
+    """
+    user = g.user
+    if not user:
+        return jsonify(errno=RET.SESSIONERR,errmsg='用户未登录')
+    news_id = request.json.get('news_id')
+    parent_id = request.json.get('parent_id')
+    content = request.json.get('comment')
+    if not all([news_id,content]):
+        return jsonify(errno=RET.PARAMERR,errmsg='参数缺失111')
+    try:
+        news_id = int(news_id)
+        if parent_id:
+            parent_id = int(parent_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR,errmsg='参数错误222')
+    try:
+        news = News.query.get(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR,errmsg='查询数据失败')
+    if not news:
+        return jsonify(errno=RET.NODATA,errmsg='数据不存在')
+    comment = Comment()
+    comment.user_id = user.id
+    comment.news_id = news_id
+    comment.content = content
+    if parent_id:
+        comment.parent_id = parent_id
+    try:
+        db.session.add(comment)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+    return jsonify(errno=RET.OK,errmsg='OK',data=comment.to_dict())
+
+
+@news_blu.route('/comment_like',methods=['POST'])
+@login_required
+def comment_like():
+    """
+    点赞或取消点赞
+    1、获取用户登录信息
+    2、获取参数，comment_id,action
+    3、检查参数的完整性
+    4、判断action是否为add，remove
+    5、把comment_id转成整型
+    6、根据comment_id查询数据库
+    7、判断查询结果
+    8、判断行为是点赞还是取消点赞
+    9、如果为点赞，查询改评论，点赞次数加1，否则减1
+    10、提交数据
+    11、返回结果
+
+    :return:
+    """
+    user = g.user
+    comment_id = request.json.get('comment_id')
+    action = request.json.get('action')
+    if not all([comment_id,action]):
+        return jsonify(errno=RET.PARAMERR,errmsg='参数不完整')
+    if action not in ['add','remove']:
+        return jsonify(errno=RET.PARAMERR,errmsg='参数错误')
+    try:
+        comment_id = int(comment_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR,errmsg='参数错误')
+    try:
+        comments = Comment.query.get(comment_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR,errmsg='保存数据失败')
+    if not comments:
+        return jsonify(errno=RET.NODATA,errmsg='评论不存在')
+    if action == 'add':
+        comment_like_model = CommentLike.query.filter(CommentLike.user_id == user.id,CommentLike.comment_id== comment_id).first()
+        if not comment_like_model:
+            comment_like_model = CommentLike()
+            comment_like_model.user_id = user.id
+            comment_like_model.comment_id = comment_id
+            db.session.add(comment_like_model)
+            comments.like_count += 1
+    else:
+        comment_like_model = CommentLike.query.filter(CommentLike.user_id==user.id,CommentLike.comment_id==comment_id).first()
+        if comment_like_model:
+            db.session.delete(comment_like_model)
+            comments.like_count -= 1
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR,errmsg='保存数据失败')
+
+    return jsonify(errno=RET.OK,errmsg='OK')
+
+
+@news_blu.route('/followed_user',methods=['POST'])
+@login_required
+def followed_user():
+    """
+    关注与取消关注
+    1、获取用户信息,如果未登录直接返回
+    2、获取参数，user_id和action
+    3、检查参数的完整性
+    4、校验参数，action是否为followed，unfollow
+    5、根据用户id获取被关注的用户
+    6、判断获取结果
+    7、根据对应的action执行操作，关注或取消关注
+    8、返回结果
+    :return:
+    """
+    user = g.user
+    if not user:
+        return jsonify(errno=RET.SESSIONERR,errmsg='用户未登录')
+    user_id = request.json.get('user_id')
+    action = request.json.get('action')
+    if not all([user_id,action]):
+        return jsonify(errno=RET.PARAMERR,errmsg='参数不完整')
+    if action not in ['followed','unfollow']:
+        return jsonify(errno=RET.PARAMERR,errmsg='参数错误')
+    try:
+        other = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR,errmsg='查询数据失败')
+    if not other:
+        return jsonify(errno=RET.NODATA,errmsg='无用户数据')
+    if action == 'follow':
+        if other not in user.followed:
+            user.followed.append(other)
+        else:
+            return jsonify(errno=RET.DATAEXIST,errmsg='当前用户已被关注')
+    else:
+        if other in user.followed:
+            user.followed.remove(other)
+        else:
+            return jsonify(errno=RET.DATAEXIST,errmsg='当前用户未被关注')
+    return jsonify(errno=RET.OK,errmsg='OK')
+
+
 
 
 

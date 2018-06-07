@@ -40,7 +40,7 @@ $(function(){
             }
 
         })
-
+       
     })
 
     // 取消收藏
@@ -72,7 +72,7 @@ $(function(){
             }
 
         })
-
+     
     })
 
     // 评论提交
@@ -301,7 +301,7 @@ $(function(){
             "user_id": user_id
         }
         $.ajax({
-            url: "/news/followed_user",
+            url: "/followed_user",
             type: "post",
             contentType: "application/json",
             headers: {

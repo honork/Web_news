@@ -45,7 +45,6 @@ $(function () {
             // 判断页数，去更新新闻数据
             if (!data_querying){
                 data_querying = true
-                // 判断当前页数小于总页数
                 if (cur_page < total_page){
                     cur_page += 1
                     updateNewsData()
@@ -63,7 +62,6 @@ function updateNewsData() {
         "cid":currentCid,
         "page":cur_page
     }
-    // get、post、ajax区别：ajax是包含所有属性，当我们在发送请求，需要更精确的属性控制的时候，使用ajax
     $.get("/news_list",params,function(resp){
         data_querying = false
         if (resp.errno == "0"){

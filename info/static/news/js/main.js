@@ -72,7 +72,7 @@ $(function(){
 	var sHash = window.location.hash;
 	if(sHash!=''){
 		var sId = sHash.substring(1);
-		var oNow = $('.'+sId);		
+		var oNow = $('.'+sId);
 		var iNowIndex = oNow.index();
 		$('.option_list li').eq(iNowIndex).addClass('active').siblings().removeClass('active');
 		oNow.show().siblings().hide();
@@ -110,31 +110,32 @@ $(function(){
         }
 
         // 发起登录请求
-        // 构造请求参数
         var params = {
             "mobile":mobile,
             "password":password
         }
-        // 发送ajax请求
         $.ajax({
-            url:'/passport/login',
-            type:'post',
+            url:"/passport/login",
+            type:"post",
+            contentType:"application/json",
             data:JSON.stringify(params),
-            contentType:'application/json',
             headers:{
-                'X-CSRFToken':getCookie('csrf_token')
+                "X-CSRFToken":getCookie('csrf_token')
             },
-            success:function(resp){
-                if (resp.errno == '0'){
+            success:function (resp) {
+                if (resp.errno == "0"){
                     location.reload()
                 }else{
-                    alert(resp.errmsg);
-                    $("#login-password-err").html(resp.errmsg)
-                    $("#login-password-err").show();
+                    alert(resp.errmsg)
+                    $(".login-password-err").html(resp.errmsg);
+                    $(".login-password-err").show()
                 }
             }
         })
+
     })
+
+
 
 
     // 注册按钮点击
@@ -168,44 +169,39 @@ $(function(){
         }
 
         // 发起注册请求
-        // 构造请求参数
         var params = {
             "mobile":mobile,
-            "sms_code":smscode,
+            "smscode":smscode,
             "password":password
         }
-
-        //发送ajax请求，post
         $.ajax({
-            url:'/passport/register',
-            type:'post',
+            url:"/passport/register",
+            type:"post",
+            contentType:"application/json",
             data:JSON.stringify(params),
-            contentType:'application/json',//dataType:'json'
+            dataType:"json",
             headers:{
-                'X-CSRFToken':getCookie('csrf_token')
+                "X-CSRFToken":getCookie('csrf_token')
             },
-            success:function(resp){
+            success:function (resp) {
                 if (resp.errno == '0'){
                     location.reload()
                 }else{
                     alert(resp.errmsg);
-                    $("#register-password-err").html(resp.errmsg);
-                    $("#register-password-err").show();
+                    $('#register-password-err').html(resp.errmsg);
+                    $('#register-password-err').show()
                 }
             }
         })
-
     })
 })
 
-var imageCodeId = ""
+var imageCodeId = "";
 
 // 生成一个图片验证码的编号，并设置页面中图片验证码img标签的src属性
 function generateImageCode() {
-    // 获取uuid
     imageCodeId = generateUUID();
-    // 构造请求的url
-    var url = '/passport/image_code?image_code_id=' + imageCodeId
+    url = '/passport/image_code?imageCodeId=' + imageCodeId
     $('.get_pic_code').attr('src',url)
 
 }
@@ -230,46 +226,50 @@ function sendSMSCode() {
     }
 
     // 发送短信验证码
-    // 构造请求的参数
     var params = {
-        "mobile":mobile,
-        "image_code":imageCode,
-        "image_code_id":imageCodeId
-    };
-    // 发送ajax
+        'mobile':mobile,
+        'image_code':imageCode,
+        'image_code_id':imageCodeId
+    }
     $.ajax({
-        url:'/passport/sms_code',
-        type:'post',
+        url:"/passport/sms_code",
+        type:"post",
         data:JSON.stringify(params),
-        contentType:'application/json',
-        // 请求头，前端需要把浏览器的cookie中的csrf_token手动放入到请求体中
+        contentType:"application/json",
         headers:{
-            'X-CSRFToken':getCookie('csrf_token')
+            "X-CSRFToken":getCookie('csrf_token')
         },
         success:function(resp){
-            if (resp.errno == '0'){
+            if (resp.errno == "0"){
                 var num = 60;
-                // 构造定时器对象
                 var t = setInterval(function(){
                     if (num == 1){
-                        // 清除定时器对象
-                        clearInterval(t)
-                        $('.get_code').html('点击获取验证码');
-                        $('.get_code').attr("onclick", "sendSMSCode();");
+                        clearInterval(t);
+                        $(".get_code").html('点击获取验证码');
+                        $(".get_code").attr("onclick","sendSMSCode();");
                     }else{
                         num -= 1;
-                        $('.get_code').html(num + '秒')
+                        $(".get_code").html(num + "秒");
                     }
                 },1000)
-            }else{
+            }else {
                 alert(resp.errmsg);
-                $('.get_code').html('点击获取验证码');
-                $('.get_code').attr("onclick", "sendSMSCode();");
+                $(".get_code").attr("onclick","sendSMSCode();")
             }
         }
     })
 
 }
+
+
+// 用户退出登录
+function logout(){
+    $.get("/passport/logout",function(resp){
+        location.reload()
+    })
+}
+
+
 
 // 调用该函数模拟点击左侧按钮
 function fnChangeMenu(n) {
@@ -304,12 +304,4 @@ function generateUUID() {
         return (c=='x' ? r : (r&0x3|0x8)).toString(16);
     });
     return uuid;
-}
-
-// 用户退出
-function logout() {
-    $.get('/passport/logout',function(resp){
-        location.reload()
-    })
-
 }
