@@ -468,7 +468,49 @@ def other_news_list():
     }
     return jsonify(errno=RET.OK,errmsg='OK',data=data)
 
+@profile_blu.route('/collection')
+@login_required
+def user_collection():
+    """
+    用户收藏
+    1、获取参数，页数p，默认1
+    2、判断参数，整型
+    3、获取用户信息，定义容器存储查询结果，总页数默认1，当前页默认1
+    4、查询数据库，从用户收藏的的新闻中进行分页，user.collection_news
+    5、获取总页数、当前页、新闻数据
+    6、定义字典列表，遍历查询结果，添加到列表中
+    7、返回模板news/user_collection.html,'total_page',current_page,'collections'
 
+    :return:
+    """
+    page = request.args.get('p','1')
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+    user = g.user
+    news_list = []
+    total_page = 1
+    current_page = 1
+    try:
+        paginate = user.collection_news.paginate(page,constants.USER_COLLECTION_MAX_NEWS,False)
+        current_page = paginate.page
+        total_page = paginate.pages
+        news_list = paginate.items
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_dict_list = []
+    for news in news_list:
+        news_dict_list.append(news.to_basic_dict())
+    data = {
+        'collections':news_dict_list,
+        'total_page':total_page,
+        'current_page':current_page
+    }
+
+    return render_template('news/user_collection.html',data=data)
 
 
 

@@ -7,7 +7,7 @@ class Config:
     SECRET_KEY = 'heyKyqaUgg8jAJJvjwxy3bUCkBFBX5ao3kK0HLptbW8='
 
     # 配置sqlalchemy连接mysql数据库
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@localhost/python2'
+    SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@localhost/news'
     # 配置数据库的动态追踪修改
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

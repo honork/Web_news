@@ -1,6 +1,7 @@
 # 导入蓝图对象
 import random
 
+from datetime import datetime
 from flask import request, jsonify, current_app, make_response, session
 
 from info.models import User
@@ -118,7 +119,7 @@ def send_sms_code():
             return jsonify(errno=RET.DATAEXIST,errmsg='手机号已注册')
     # 构造六位数的短信随机数
     sms_code = '%06d' % random.randint(0, 999999)
-    # print(sms_code)
+    print(sms_code)
     # 保存到redis数据库中
     try:
         redis_store.setex('SMSCode_' + mobile,constants.SMS_CODE_REDIS_EXPIRES,sms_code)
@@ -272,6 +273,15 @@ def login():
     session['mobile'] = user.mobile
     # 需要修改默认的昵称，因为用户可以登录多次，可能会在某次登录的过程中修改了昵称
     session['nick_name'] = user.nick_name
+    # 登录时间
+    user.last_login = datetime.now()
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR,errmsg='保存数据失败')
     # 返回结果
     return jsonify(errno=RET.OK,errmsg='OK')
 
@@ -286,6 +296,7 @@ def logout():
     session.pop("user_id")
     session.pop("nick_name")
     session.pop("mobile")
+    session.pop("id_admin",None)
     return jsonify(errno=RET.OK,errmsg='OK')
 
 

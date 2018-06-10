@@ -134,8 +134,6 @@ def get_news_detail(news_id):
     :return:
     """
     user = g.user
-    # if not user:
-    #     return jsonify(errno=RET.SESSIONERR,errmsg='用户未登录')
     # 根据新闻id来查询新闻详细的数据
     try:
         news = News.query.get(news_id)
@@ -155,9 +153,65 @@ def get_news_detail(news_id):
         current_app.logger.error(e)
         db.session.rollback()
         return jsonify(errno=RET.DBERR,errmsg='保存数据失败')
+    # 收藏,默认为False，如果用户已登录，并且该新闻已被登录用户收藏
+    is_collected = False
+    if user and news in user.collection_news:
+        is_collected = True
+
+    # 评论
+    comments = []
+    try:
+        comments = Comment.query.filter(Comment.news_id == news_id).order_by(Comment.create_time.desc()).all()
+    except Exception as e:
+        current_app.logger.error(e)
+    comment_like_ids = []
+    # 获取当前登录用户的所有评论的id，
+    if user:
+        try:
+            comment_ids = [comment.id for comment in comments]
+            # 再查询点赞了哪些评论
+            comment_likes = CommentLike.query.filter(CommentLike.comment_id.in_(comment_ids),
+                                                     CommentLike.user_id == g.user.id).all()
+            # 遍历点赞的评论数据,获取
+            comment_like_ids = [comment_like.comment_id for comment_like in comment_likes]
+        except Exception as e:
+            current_app.logger.error(e)
+    comment_dict_li = []
+    for comment in comments:
+        comment_dict = comment.to_dict()
+        # 如果未点赞
+        comment_dict['is_like'] = False
+        # 如果点赞
+        if comment.id in comment_like_ids:
+            comment_dict['is_list'] = True
+        comment_dict_li.append(comment_dict)
+
+    is_followed = False
+    # 用户关注新闻的发布者，即登录用户关注作者。，
+    if news.user and user:
+        if news.user in user.followers:
+            is_followed = True
+    # 项目首页的点击排行：默认按照新闻点击次数进行排序，limit6条
+    try:
+        news_list = News.query.order_by(News.clicks.desc()).limit(6)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询数据库失败')
+    # 判断查询结果
+    if not news_list:
+        return jsonify(errno=RET.NODATA, errmsg='无新闻数据')
+    # 定义容器，存储查询结果对象转成的字典数据
+    news_dict_list = []
+    for index in news_list:
+        news_dict_list.append(index.to_dict())
+
     data = {
         'user':user.to_dict() if user else None,
-        'news':news.to_dict()
+        'news_dict_list':news_dict_list,
+        'news_detail':news.to_dict(),
+        'is_collected':is_collected,
+        'is_followed':is_followed,
+        'comments':comment_dict_li
     }
 
     return render_template('news/detail.html',data=data)
@@ -361,7 +415,7 @@ def followed_user():
     action = request.json.get('action')
     if not all([user_id,action]):
         return jsonify(errno=RET.PARAMERR,errmsg='参数不完整')
-    if action not in ['followed','unfollow']:
+    if action not in ['follow','unfollow']:
         return jsonify(errno=RET.PARAMERR,errmsg='参数错误')
     try:
         other = User.query.get(user_id)
@@ -370,16 +424,17 @@ def followed_user():
         return jsonify(errno=RET.DBERR,errmsg='查询数据失败')
     if not other:
         return jsonify(errno=RET.NODATA,errmsg='无用户数据')
+    # 如果选择关注
     if action == 'follow':
         if other not in user.followed:
             user.followed.append(other)
         else:
             return jsonify(errno=RET.DATAEXIST,errmsg='当前用户已被关注')
+    # 取消关注
     else:
         if other in user.followed:
             user.followed.remove(other)
-        else:
-            return jsonify(errno=RET.DATAEXIST,errmsg='当前用户未被关注')
+
     return jsonify(errno=RET.OK,errmsg='OK')
 
 

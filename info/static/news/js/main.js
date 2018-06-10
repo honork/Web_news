@@ -171,7 +171,7 @@ $(function(){
         // 发起注册请求
         var params = {
             "mobile":mobile,
-            "smscode":smscode,
+            "sms_code":smscode,
             "password":password
         }
         $.ajax({
@@ -201,7 +201,7 @@ var imageCodeId = "";
 // 生成一个图片验证码的编号，并设置页面中图片验证码img标签的src属性
 function generateImageCode() {
     imageCodeId = generateUUID();
-    url = '/passport/image_code?imageCodeId=' + imageCodeId
+    url = '/passport/image_code?image_code_id=' + imageCodeId
     $('.get_pic_code').attr('src',url)
 
 }
@@ -266,6 +266,12 @@ function sendSMSCode() {
 function logout(){
     $.get("/passport/logout",function(resp){
         location.reload()
+    })
+}
+// 管理员退出
+function adminlogout(){
+    $.get("/passport/logout",function(resp){
+        window.location.href = '/'
     })
 }
 

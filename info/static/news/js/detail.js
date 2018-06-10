@@ -14,7 +14,7 @@ $(function(){
     // 收藏
     $(".collection").click(function () {
         var params = {
-            "news_id":$(this).attr("data-newid"),
+            "news_id":$(this).attr("data-newsid"),
             "action":"collect"
         }
         $.ajax({
@@ -46,7 +46,7 @@ $(function(){
     // 取消收藏
     $(".collected").click(function () {
         var params = {
-            "news_id":$(this).attr("data-newid"),
+            "news_id":$(this).attr("data-newsid"),
             "action":"cancel_collect"
         }
         $.ajax({

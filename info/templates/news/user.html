@@ -34,7 +34,7 @@
 			<div class="user_center_name">{{ data.user.nick_name }}</div>
 
 			<ul class="option_list">
-				<li class="active"><a href="user_base_info.html" target="main_frame">基本资料</a></li>
+				<li class="active"><a href="{{ url_for("profile.base_info") }}" target="main_frame">基本资料</a></li>
 
                 <li><a href="/user/pic_info" target="main_frame">头像设置</a></li>
 				<li><a href="/user/user_follow" target="main_frame">我的关注</a></li>

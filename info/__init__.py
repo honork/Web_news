@@ -63,13 +63,17 @@ def create_app(config_name):
 
     # 导入蓝图对象
     from info.modules.news import news_blu
-    # 注册蓝图对象
+    # 注册新闻模块蓝图对象
     app.register_blueprint(news_blu)
-
+    # 注册验证模块蓝图对象
     from info.modules.passport import passport_blu
     app.register_blueprint(passport_blu)
-
+    # 注册个人中心模块蓝图对象
     from info.modules.profile import profile_blu
     app.register_blueprint(profile_blu)
+    # 注册管理员中心模块
+    from info.modules.admin import admin_blu
+    app.register_blueprint(admin_blu)
+
 
     return app
